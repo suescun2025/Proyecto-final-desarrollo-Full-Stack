@@ -28,7 +28,7 @@
             
             {% if request.user.is_authenticated %}
                 <a href="{% url 'orders' %}" class="nav-link">Mis Pedidos</a>
-                <span style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>
+                <span style="color: var(--text-secondary); font-size: 14px;">
                     Hola, <strong>{{ request.user.username }}</strong>
                 </span>
                 <a href="/admin/logout/?next=/" class="nav-link" style="color: var(--color-error)">Cerrar Sesión</a>
