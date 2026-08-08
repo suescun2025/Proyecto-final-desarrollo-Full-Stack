@@ -1,0 +1,84 @@
+{% extends 'store/base.html' %}
+
+{% block title %}Mis Pedidos - TechMatch{% endblock %}
+
+{% block content %}
+<div class="wizard-container glass-panel animate-fade-in" style="margin-top: 40px; margin-bottom: 60px;">
+    <div style="border-bottom: 1px solid var(--border-color); padding-bottom: 15px; margin-bottom: 30px;">
+        <h2 style="margin: 0; font-size: 28px; color: var(--color-accent);">Mis Pedidos Realizados</h2>
+        <p style="color: var(--text-secondary); margin-top: 5px; font-size: 14px;">Consulta el historial y estado de envío de tus compras en TechMatch.</p>
+    </div>
+
+    {% if orders %}
+        <div style="display: flex; flex-direction: column; gap: 24px;">
+            {% for order in orders %}
+                <div class="glass-card" style="border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 24px; text-align: left;">
+                    <!-- Cabecera del pedido -->
+                    <div style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 15px; border-bottom: 1px dashed var(--border-color); padding-bottom: 15px; margin-bottom: 20px;">
+                        <div>
+                            <span style="font-weight: bold; font-size: 18px; color: #fff;">Pedido #{{ order.id }}</span>
+                            <span style="color: var(--text-muted); font-size: 13px; margin-left: 10px;">{{ order.created_at|date:"d M Y, H:i" }}</span>
+                        </div>
+                        <div>
+                            <span style="font-size: 12px; font-weight: 600; padding: 4px 12px; border-radius: 20px;
+                                {% if order.status == 'PENDING' %}
+                                    background: rgba(245, 158, 11, 0.1); color: var(--color-warning);
+                                {% elif order.status == 'SHIPPED' %}
+                                    background: rgba(79, 172, 254, 0.1); color: var(--color-accent);
+                                {% else %}
+                                    background: rgba(16, 185, 129, 0.1); color: var(--color-success);
+                                {% endif %}">
+                                {{ order.get_status_display }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Detalles e ítems -->
+                    <div style="display: flex; gap: 40px; flex-wrap: wrap;">
+                        <!-- Productos del pedido -->
+                        <div style="flex: 2 1 400px;">
+                            <h4 style="margin: 0 0 12px 0; color: #fff; font-size: 15px;">Artículos</h4>
+                            <div style="display: flex; flex-direction: column; gap: 10px;">
+                                {% for item in order.items.all %}
+                                    <div style="display: flex; justify-content: space-between; font-size: 14px; background: rgba(0,0,0,0.15); padding: 10px 15px; border-radius: 6px;">
+                                        <span style="color: var(--text-primary);">
+                                            {{ item.product.name }} <strong style="color: var(--color-accent);">x{{ item.quantity }}</strong>
+                                        </span>
+                                        <span style="font-weight: 500; color: var(--text-secondary);">
+                                            {{ item.price }} €
+                                        </span>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <!-- Información de Entrega y Pago -->
+                        <div style="flex: 1 1 250px; display: flex; flex-direction: column; justify-content: space-between;">
+                            <div>
+                                <h4 style="margin: 0 0 12px 0; color: #fff; font-size: 15px;">Dirección de Envío</h4>
+                                <p style="color: var(--text-secondary); font-size: 13px; line-height: 1.5; background: rgba(0,0,0,0.1); padding: 12px; border-radius: 6px; border: 1px solid var(--border-color);">
+                                    {{ order.shipping_address }}
+                                </p>
+                            </div>
+                            
+                            <div style="margin-top: 20px; border-top: 1px solid var(--border-color); padding-top: 15px; display: flex; justify-content: space-between; align-items: center;">
+                                <span style="font-size: 16px; font-weight: 600; color: #fff;">Total:</span>
+                                <span style="font-size: 22px; font-weight: bold; color: var(--color-accent);">{{ order.total }} €</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div style="text-align: center; padding: 60px 20px; color: var(--text-muted);">
+            <span style="font-size: 60px;">📦</span>
+            <h3 style="margin-top: 15px; color: #fff;">Aún no tienes pedidos registrados</h3>
+            <p style="font-size: 14px; margin-top: 10px; max-width: 400px; margin-left: auto; margin-right: auto; line-height: 1.5;">
+                Cuando realices compras mediante nuestro asistente o catálogo, aparecerán enumeradas en esta sección en tiempo real.
+            </p>
+            <a href="{% url 'index' %}" class="btn-primary" style="margin-top: 25px; text-decoration: none;">Comenzar a Comprar</a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

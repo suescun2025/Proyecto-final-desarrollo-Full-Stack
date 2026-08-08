@@ -1,0 +1,23 @@
+{% extends 'store/base.html' %}
+
+{% block title %}TechMatch - Tienda Inteligente de Accesorios{% endblock %}
+
+{% block content %}
+<div class="hero-section animate-fade-in" style="text-align: center; padding: 60px 20px; background: radial-gradient(circle at top, rgba(0, 242, 254, 0.05) 0%, transparent 60%);">
+    <span style="background: rgba(0, 242, 254, 0.1); color: var(--color-accent); font-weight: 600; padding: 6px 16px; border-radius: 20px; font-size: 14px; letter-spacing: 1px; text-transform: uppercase;">
+        Accesorios Tecnológicos Certificados
+    </span>
+    <h1 style="font-size: 48px; margin: 20px 0 10px 0; font-weight: 800; background: linear-gradient(135deg, #fff 0%, #9ca3af 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+        TechMatch
+    </h1>
+    <p style="font-size: 18px; color: var(--text-secondary); max-width: 600px; margin: 0 auto 30px auto; line-height: 1.6;">
+        "El match perfecto para tus dispositivos." Encuentra cargadores de carga rápida, cables de alta resistencia y repuestos compatibles con tu teléfono o computadora de forma garantizada.
+    </p>
+    <a href="#react-compatibility-assistant" class="btn-primary" style="text-decoration: none;">
+        <span>🔍 Probar Asistente Visual</span>
+    </a>
+</div>
+
+<!-- Contenedor del Asistente React -->
+<div id="react-compatibility-assistant" style="margin-bottom: 60px;"></div>
+{% endblock %}

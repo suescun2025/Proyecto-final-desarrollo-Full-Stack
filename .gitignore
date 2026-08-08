@@ -1,0 +1,31 @@
+# Entornos virtuales de Python
+venv/
+ENV/
+env/
+.venv/
+
+# Base de datos local
+db.sqlite3
+
+# Variables de entorno
+.env
+
+# Archivos de Node/Vite
+node_modules/
+dist/
+
+# Archivos de compilación de Python y cachés
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.coverage
+htmlcov/
+
+# macOS files
+.DS_Store
+
+# Archivos estáticos de Django generados por collectstatic (opcional)
+staticfiles/
+media/
