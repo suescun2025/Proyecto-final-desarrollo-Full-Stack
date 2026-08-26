@@ -12,7 +12,7 @@ class DeviceModelSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = DeviceModel
-        fields = ['id', 'brand', 'brand_name', 'name']
+        fields = ['id', 'brand', 'brand_name', 'name', 'image']
 
 class ProductCategorySerializer(serializers.ModelSerializer):
     class Meta:
@@ -31,12 +31,35 @@ class ProductSerializer(serializers.ModelSerializer):
         ]
 
 class OrderItemSerializer(serializers.ModelSerializer):
-    product_name = serializers.CharField(source='product.name', read_only=True)
+    product_name = serializers.SerializerMethodField()
+    product_image = serializers.SerializerMethodField()
 
     class Meta:
         model = OrderItem
-        fields = ['id', 'product', 'product_name', 'quantity', 'price']
+        fields = ['id', 'product', 'product_name', 'product_image', 'quantity', 'price', 'custom_image', 'custom_model']
         read_only_fields = ['price']
+
+    def get_product_name(self, obj):
+        if obj.custom_model:
+            c_model = obj.custom_model.strip()
+            device_keywords = ['macbook', 'iphone', 'samsung', 'ipad', 'galaxy', 'xiaomi', 'pixel']
+            is_device_model = any(kw in c_model.lower() for kw in device_keywords)
+            
+            if not is_device_model and c_model != obj.product.name:
+                return c_model
+            elif is_device_model and ("Personalizada" in obj.product.name or "Carcasa" in obj.product.name):
+                return "Carcasa Personalizada"
+        return obj.product.name
+
+    def get_product_image(self, obj):
+        if obj.custom_image:
+            return obj.custom_image
+        elif obj.product and obj.product.image:
+            try:
+                return obj.product.image.url
+            except Exception:
+                return ""
+        return ""
 
 class OrderSerializer(serializers.ModelSerializer):
     items = OrderItemSerializer(many=True)
@@ -44,12 +67,17 @@ class OrderSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Order
-        fields = ['id', 'user_username', 'created_at', 'status', 'total', 'shipping_address', 'items']
-        read_only_fields = ['id', 'created_at', 'total', 'status']
+        fields = ['id', 'user_username', 'created_at', 'status', 'total', 'shipping_address', 'cancellation_reason', 'items']
+        read_only_fields = ['id', 'created_at', 'total']
 
     def create(self, validated_data):
         items_data = validated_data.pop('items')
         user = self.context['request'].user
+        if not user or user.is_anonymous:
+            user, _ = User.objects.get_or_create(
+                username='cliente_demo',
+                defaults={'email': 'demo@techmatch.com', 'first_name': 'Cliente', 'last_name': 'Demo'}
+            )
         
         # Calcular total
         total = 0
@@ -57,23 +85,41 @@ class OrderSerializer(serializers.ModelSerializer):
         for item_data in items_data:
             product = item_data['product']
             quantity = item_data['quantity']
+            custom_image = item_data.get('custom_image', '')
+            custom_model = item_data.get('custom_model', '')
             
-            # Verificar stock
-            if product.stock < quantity:
+            # Usar precio individual proporcionado o fallback al precio del producto
+            item_price = item_data.get('price', None)
+            if item_price is not None:
+                try:
+                    item_price = float(item_price)
+                except (ValueError, TypeError):
+                    item_price = float(product.price)
+            else:
+                item_price = float(product.price)
+
+            if not custom_image and product.image:
+                custom_image = product.image.url
+            
+            # Verificar stock (excepto para carcasas personalizadas)
+            if product.name != "Carcasa Personalizada con Diseño Web/Google" and product.stock < quantity:
                 raise serializers.ValidationError(f"Stock insuficiente para {product.name}")
             
-            price = product.price * quantity
-            total += price
+            line_total = item_price * quantity
+            total += line_total
             
-            # Reducir stock del producto
-            product.stock -= quantity
-            product.save()
+            # Reducir stock del producto (excepto para carcasas personalizadas)
+            if product.name != "Carcasa Personalizada con Diseño Web/Google":
+                product.stock -= quantity
+                product.save()
             
             order_items.append(
                 OrderItem(
                     product=product,
                     quantity=quantity,
-                    price=product.price
+                    price=item_price,
+                    custom_image=custom_image,
+                    custom_model=custom_model
                 )
             )
             

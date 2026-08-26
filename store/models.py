@@ -16,6 +16,7 @@ class DeviceBrand(models.Model):
 class DeviceModel(models.Model):
     brand = models.ForeignKey(DeviceBrand, on_delete=models.CASCADE, related_name='models', verbose_name="Marca")
     name = models.CharField(max_length=100, verbose_name="Nombre del Modelo")
+    image = models.ImageField(upload_to='device_models/', null=True, blank=True, verbose_name="Imagen del Modelo")
 
     class Meta:
         verbose_name = "Modelo de Dispositivo"
@@ -60,6 +61,7 @@ class Order(models.Model):
         ('PENDING', 'Pendiente'),
         ('SHIPPED', 'Enviado'),
         ('DELIVERED', 'Entregado'),
+        ('CANCELLED', 'Cancelado'),
     ]
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='orders', verbose_name="Usuario / Cliente")
@@ -67,6 +69,7 @@ class Order(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING', verbose_name="Estado de Pedido")
     total = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Total Pagado")
     shipping_address = models.TextField(verbose_name="Dirección de Envío")
+    cancellation_reason = models.TextField(blank=True, default='', verbose_name="Motivo de Cancelación")
 
     class Meta:
         verbose_name = "Pedido"
@@ -81,6 +84,8 @@ class OrderItem(models.Model):
     product = models.ForeignKey(Product, on_delete=models.PROTECT, related_name='order_items', verbose_name="Producto")
     quantity = models.PositiveIntegerField(default=1, verbose_name="Cantidad")
     price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Precio Unitario")
+    custom_image = models.TextField(null=True, blank=True, verbose_name="Imagen Personalizada (URL o Base64)")
+    custom_model = models.CharField(max_length=100, null=True, blank=True, verbose_name="Modelo Personalizado")
 
     class Meta:
         verbose_name = "Item del Pedido"

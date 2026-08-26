@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { translations } from '../translations';
 
-const CompatibilityAssistant = () => {
+const CompatibilityAssistant = ({ onViewProductDetail, currentLang }) => {
+  const activeLang = currentLang || localStorage.getItem('techmatch_lang') || 'es';
+  const t = (key) => translations[activeLang]?.[key] || translations['es']?.[key] || key;
+
   const [step, setStep] = useState(1);
   const [brands, setBrands] = useState([]);
   const [models, setModels] = useState([]);
@@ -19,9 +23,10 @@ const CompatibilityAssistant = () => {
 
   const fetchBrands = async () => {
     setLoading(true);
+    setError(null);
     try {
       const response = await fetch('/api/brands/');
-      if (!response.ok) throw new Error('Error al cargar las marcas');
+      if (!response.ok) throw new Error('Error al cargar las marcas de dispositivos.');
       const data = await response.json();
       setBrands(data);
     } catch (err) {
@@ -37,9 +42,10 @@ const CompatibilityAssistant = () => {
     setProducts([]);
     setStep(2);
     setLoading(true);
+    setError(null);
     try {
       const response = await fetch(`/api/models/?brand_id=${brand.id}`);
-      if (!response.ok) throw new Error('Error al cargar los modelos');
+      if (!response.ok) throw new Error('Error al cargar los modelos de esta marca.');
       const data = await response.json();
       setModels(data);
     } catch (err) {
@@ -53,9 +59,10 @@ const CompatibilityAssistant = () => {
     setSelectedModel(model);
     setStep(3);
     setLoading(true);
+    setError(null);
     try {
       const response = await fetch(`/api/products/?model_id=${model.id}`);
-      if (!response.ok) throw new Error('Error al cargar los productos compatibles');
+      if (!response.ok) throw new Error('Error al cargar los accesorios compatibles.');
       const data = await response.json();
       setProducts(data);
     } catch (err) {
@@ -65,7 +72,8 @@ const CompatibilityAssistant = () => {
     }
   };
 
-  const addToCart = (product) => {
+  const addToCart = (product, e) => {
+    e.stopPropagation(); // Evitar abrir el modal al añadir al carrito
     let cart = JSON.parse(localStorage.getItem('cart')) || [];
     const existingItemIndex = cart.findIndex(item => item.id === product.id);
 
@@ -74,6 +82,7 @@ const CompatibilityAssistant = () => {
     } else {
       cart.push({
         id: product.id,
+        databaseId: product.id,
         name: product.name,
         price: product.price,
         image: product.image,
@@ -83,7 +92,7 @@ const CompatibilityAssistant = () => {
 
     localStorage.setItem('cart', JSON.stringify(cart));
     // Disparar evento global para actualizar el componente CartDrawer
-    window.dispatchEvent(new CustomEvent('cart-updated'));
+    window.dispatchEvent(new CustomEvent('cart-updated', { detail: { open: true } }));
   };
 
   const resetAssistant = () => {
@@ -94,54 +103,60 @@ const CompatibilityAssistant = () => {
   };
 
   return (
-    <div className="wizard-container glass-panel animate-fade-in">
-      <h2 style={{ textAlign: 'center', marginBottom: '10px', fontSize: '28px', color: '#00f2fe' }}>
-        Asistente de Compatibilidad Inteligente
-      </h2>
-      <p style={{ textAlign: 'center', color: '#9ca3af', marginBottom: '30px' }}>
-        Encuentra el accesorio perfecto y compatible para tus dispositivos en 3 simples pasos.
-      </p>
+    <div className="wizard-container compatibility-assistant-container glass-panel animate-fade-in">
+      <div className="wizard-header">
+        <h2 className="white-blue-script-title" style={{ fontSize: '42px', margin: '0 0 2px 0' }}>{t('assistantTitle')}</h2>
+        <p style={{ marginTop: '10px' }}>{t('assistantSubtitle')}</p>
+      </div>
 
       {/* Indicadores de Paso */}
-      <div className="wizard-steps">
-        <div className={`step-indicator ${step >= 1 ? 'active' : ''}`}>
+      <div className="wizard-steps-container">
+        <div className={`step-indicator ${step >= 1 ? 'active' : ''}`} onClick={() => step > 1 && setStep(1)}>
           <div className="step-number">1</div>
-          <span>Marca</span>
+          <div className="step-desc">
+            <span className="step-label">{t('step1Label')}</span>
+            <span className="step-title">{t('step1Title')}</span>
+          </div>
         </div>
-        <div style={{ color: '#6b7280', fontSize: '18px' }}>➔</div>
-        <div className={`step-indicator ${step >= 2 ? 'active' : ''}`}>
+        <div className="step-line-divider"></div>
+        <div className={`step-indicator ${step >= 2 ? 'active' : ''}`} onClick={() => step > 2 && setStep(2)}>
           <div className="step-number">2</div>
-          <span>Modelo</span>
+          <div className="step-desc">
+            <span className="step-label">{t('step2Label')}</span>
+            <span className="step-title">{t('step2Title')}</span>
+          </div>
         </div>
-        <div style={{ color: '#6b7280', fontSize: '18px' }}>➔</div>
+        <div className="step-line-divider"></div>
         <div className={`step-indicator ${step >= 3 ? 'active' : ''}`}>
           <div className="step-number">3</div>
-          <span>Compatibles</span>
+          <div className="step-desc">
+            <span className="step-label">{t('step3Label')}</span>
+            <span className="step-title">{t('step3Title')}</span>
+          </div>
         </div>
       </div>
 
       {loading && (
-        <div style={{ textAlign: 'center', padding: '40px', color: '#00f2fe' }}>
-          <div className="animate-spin" style={{ display: 'inline-block', width: '30px', height: '30px', border: '3px solid rgba(0,242,254,0.3)', borderTopColor: '#00f2fe', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
-          <p style={{ marginTop: '10px' }}>Cargando datos...</p>
-          <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+        <div className="loader-container">
+          <div className="spinner"></div>
+          <p>Cargando datos técnicos...</p>
         </div>
       )}
 
       {error && (
-        <div style={{ padding: '20px', background: 'rgba(239, 68, 110, 0.1)', border: '1px solid #ef4444', borderRadius: '8px', color: '#ef4444', marginBottom: '20px', textAlign: 'center' }}>
-          {error}
+        <div className="error-alert">
+          <span>⚠️</span> {error}
         </div>
       )}
 
       {!loading && !error && (
-        <>
+        <div className="wizard-step-content">
           {/* PASO 1: Selección de Marca */}
           {step === 1 && (
             <div className="animate-fade-in">
-              <h3 style={{ fontSize: '20px', marginBottom: '15px' }}>Selecciona la marca de tu dispositivo</h3>
+              <h3 className="step-instruction">{t('selectBrandInstruction')}</h3>
               {brands.length === 0 ? (
-                <p style={{ color: '#6b7280' }}>No hay marcas cargadas en el sistema actualmente.</p>
+                <p style={{ color: 'var(--text-muted)', textAlign: 'center' }}>No hay marcas cargadas en el sistema actualmente.</p>
               ) : (
                 <div className="grid-brands">
                   {brands.map(brand => (
@@ -152,12 +167,20 @@ const CompatibilityAssistant = () => {
                     >
                       <div className="brand-logo-placeholder">
                         {brand.logo ? (
-                          <img src={brand.logo} alt={brand.name} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                          <img src={brand.logo} alt={brand.name} className="brand-logo-img" />
                         ) : (
-                          brand.name.substring(0, 2).toUpperCase()
+                          <img 
+                            src={`/assets/brands/${brand.name.toLowerCase()}.png`} 
+                            alt={brand.name} 
+                            className="brand-logo-img"
+                            onError={(e) => {
+                              e.target.style.display = 'none';
+                              e.target.parentElement.innerText = brand.name.substring(0, 2).toUpperCase();
+                            }}
+                          />
                         )}
                       </div>
-                      <div style={{ fontWeight: '600' }}>{brand.name}</div>
+                      <div className="brand-name-label">{brand.name}</div>
                     </div>
                   ))}
                 </div>
@@ -168,12 +191,15 @@ const CompatibilityAssistant = () => {
           {/* PASO 2: Selección de Modelo */}
           {step === 2 && (
             <div className="animate-fade-in">
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
-                <h3 style={{ fontSize: '20px' }}>Selecciona el modelo de tu {selectedBrand?.name}</h3>
-                <button className="btn-secondary" onClick={() => setStep(1)}>Atrás</button>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                <h3 className="step-instruction" style={{ margin: 0 }}>{t('selectModelInstruction')} ({selectedBrand?.name})</h3>
+                <button className="btn-secondary" onClick={() => setStep(1)}>{t('backBtn')}</button>
               </div>
               {models.length === 0 ? (
-                <p style={{ color: '#6b7280' }}>No hay modelos disponibles para esta marca.</p>
+                <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>
+                  <p>No hay modelos cargados para {selectedBrand?.name}.</p>
+                  <button className="btn-secondary" style={{ marginTop: '10px' }} onClick={() => setStep(1)}>{t('changeBrandBtn')}</button>
+                </div>
               ) : (
                 <div className="grid-models">
                   {models.map(model => (
@@ -182,7 +208,25 @@ const CompatibilityAssistant = () => {
                       className="model-card glass-card"
                       onClick={() => handleModelSelect(model)}
                     >
-                      <div style={{ fontWeight: '500' }}>{model.name}</div>
+                      {model.image ? (
+                        <img 
+                          src={model.image} 
+                          alt={model.name} 
+                          style={{ 
+                            width: '52px', 
+                            height: '52px', 
+                            objectFit: 'cover', 
+                            borderRadius: '10px', 
+                            marginBottom: '8px',
+                            border: '1px solid rgba(0, 240, 255, 0.35)',
+                            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.35)'
+                          }} 
+                        />
+                      ) : (
+                        <span className="device-icon">📱</span>
+                      )}
+                      <div style={{ fontWeight: '600', fontSize: '15px' }}>{model.name}</div>
+                      <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>Ver accesorios</div>
                     </div>
                   ))}
                 </div>
@@ -193,80 +237,92 @@ const CompatibilityAssistant = () => {
           {/* PASO 3: Listado de Productos Compatibles */}
           {step === 3 && (
             <div className="animate-fade-in">
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px', flexWrap: 'wrap', gap: '15px' }}>
                 <div>
-                  <h3 style={{ fontSize: '22px', color: '#00f2fe', margin: 0 }}>
-                    Accesorios para: {selectedBrand?.name} {selectedModel?.name}
+                  <h3 className="step-instruction" style={{ margin: 0 }}>
+                    Accesorios 100% Compatibles con {selectedBrand?.name} {selectedModel?.name}
                   </h3>
-                  <p style={{ color: '#9ca3af', fontSize: '14px', marginTop: '5px' }}>
-                    Productos 100% compatibles y garantizados
+                  <p style={{ color: 'var(--color-success)', fontSize: '13px', margin: '4px 0 0 0', fontWeight: '500' }}>
+                    ✓ Certificado de compatibilidad garantizado para tu dispositivo
                   </p>
                 </div>
                 <div style={{ display: 'flex', gap: '10px' }}>
                   <button className="btn-secondary" onClick={() => setStep(2)}>Atrás</button>
-                  <button className="btn-secondary" style={{ borderColor: 'rgba(239, 68, 68, 0.4)', color: '#ef4444' }} onClick={resetAssistant}>Reiniciar</button>
+                  <button className="btn-secondary" style={{ borderColor: 'rgba(239, 68, 68, 0.4)', color: 'var(--color-error)' }} onClick={resetAssistant}>Reiniciar</button>
                 </div>
               </div>
 
               {products.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '40px', background: 'rgba(255,255,255,0.02)', borderRadius: '12px', border: '1px dashed var(--border-color)' }}>
-                  <p style={{ color: '#9ca3af', fontSize: '18px' }}>No se encontraron accesorios compatibles listados en este momento.</p>
-                  <p style={{ color: '#6b7280', fontSize: '14px', marginTop: '10px' }}>Prueba con otro dispositivo o vuelve a consultar más tarde.</p>
+                <div style={{ textAlign: 'center', padding: '60px 20px', background: 'rgba(0,0,0,0.15)', borderRadius: '12px', border: '1px dashed var(--border-color)' }}>
+                  <span style={{ fontSize: '50px' }}>🔍</span>
+                  <h4 style={{ margin: '15px 0 5px 0', fontSize: '18px' }}>Sin resultados disponibles</h4>
+                  <p style={{ color: 'var(--text-secondary)', maxWidth: '400px', margin: '0 auto', fontSize: '14px' }}>No hay accesorios registrados en el sistema para este modelo específico en este momento.</p>
+                  <button className="btn-secondary" style={{ marginTop: '20px' }} onClick={resetAssistant}>Elegir otro dispositivo</button>
                 </div>
               ) : (
                 <div className="grid-products">
                   {products.map(product => (
-                    <div key={product.id} className="glass-card" style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden', border: '1px solid var(--border-color)', borderRadius: '12px' }}>
-                      <div style={{ height: '200px', background: 'rgba(0,0,0,0.2)', display: 'flex', alignItems: 'center', justifyContext: 'center', position: 'relative' }}>
+                    <div 
+                      key={product.id} 
+                      className="product-card-premium glass-card"
+                      onClick={() => onViewProductDetail(product)}
+                    >
+                      <div className="product-image-container">
                         {product.image ? (
-                          <img src={product.image} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          <img src={product.image} alt={product.name} className="product-image-img" />
                         ) : (
-                          <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#6b7280', background: 'var(--bg-secondary)' }}>
-                            <span style={{ fontSize: '40px' }}>📦</span>
-                            <span style={{ fontSize: '12px', marginTop: '5px' }}>Sin imagen disponible</span>
+                          <div className="product-image-placeholder">
+                            <span>📦</span>
                           </div>
                         )}
-                        <span style={{ position: 'absolute', top: '10px', left: '10px', background: 'rgba(0,242,254,0.15)', color: '#00f2fe', padding: '3px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: 'bold' }}>
-                          {product.category_name}
+                        <span className="product-cat-badge">
+                          {translations[activeLang]?.categories?.[product.category_name] || product.category_name}
                         </span>
                       </div>
                       
-                      <div style={{ padding: '20px', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                      <div className="product-card-body">
                         <div>
-                          <h4 style={{ margin: '0 0 10px 0', fontSize: '16px', fontWeight: '600', color: '#f3f4f6', lineHeight: '1.4' }}>{product.name}</h4>
-                          <p style={{ fontSize: '13px', color: '#9ca3af', display: '-webkit-box', WebkitLineClamp: '2', WebkitBoxOrient: 'vertical', overflow: 'hidden', margin: '0 0 15px 0' }}>{product.description}</p>
+                          <h4 className="product-title-text">
+                            {translations[activeLang]?.productNames?.[product.name] || product.name}
+                          </h4>
+                          <p className="product-desc-text">
+                            {translations[activeLang]?.productDescriptions?.[product.description] || product.description}
+                          </p>
                           
                           {/* Ficha técnica simplificada */}
-                          {Object.keys(product.specifications).length > 0 && (
-                            <div style={{ background: 'rgba(0,0,0,0.15)', padding: '10px', borderRadius: '6px', marginBottom: '15px', fontSize: '12px' }}>
-                              {Object.entries(product.specifications).slice(0, 3).map(([key, val]) => (
-                                <div key={key} style={{ display: 'flex', justifyContent: 'space-between', margin: '2px 0' }}>
-                                  <span style={{ color: '#6b7280', textTransform: 'capitalize' }}>{key}:</span>
-                                  <span style={{ color: '#9ca3af', fontWeight: '500' }}>{val}</span>
+                          {product.specifications && Object.keys(product.specifications).length > 0 && (
+                            <div className="product-specs-preview">
+                              {Object.entries(product.specifications).slice(0, 2).map(([key, val]) => (
+                                <div key={key} className="spec-preview-row">
+                                  <span className="spec-preview-key">
+                                    {translations[activeLang]?.specsLabel?.[key] || key}:
+                                  </span>
+                                  <span className="spec-preview-val">
+                                    {translations[activeLang]?.specsValue?.[val] || val}
+                                  </span>
                                 </div>
                               ))}
                             </div>
                           )}
                         </div>
                         
-                        <div>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
-                            <span style={{ fontSize: '20px', fontWeight: 'bold', color: '#00f2fe' }}>
+                        <div style={{ marginTop: '15px' }}>
+                          <div className="product-price-stock-row">
+                            <span className="product-price-text">
                               {product.price} €
                             </span>
-                            <span style={{ fontSize: '12px', color: product.stock > 0 ? '#10b981' : '#ef4444' }}>
-                              {product.stock > 0 ? `Stock: ${product.stock}` : 'Agotado'}
+                            <span className={`product-stock-status ${product.stock > 0 ? 'available' : 'outofstock'}`}>
+                              {product.stock > 0 ? t('inStock') : t('outOfStock')}
                             </span>
                           </div>
                           
                           <button 
                             className="btn-primary" 
-                            style={{ width: '100%', justifyContent: 'center' }}
-                            onClick={() => addToCart(product)}
+                            style={{ width: '100%', justifyContent: 'center', height: '40px', marginTop: '10px' }}
+                            onClick={(e) => addToCart(product, e)}
                             disabled={product.stock <= 0}
                           >
-                            <span>🛒</span>
-                            <span>{product.stock > 0 ? 'Añadir al Carrito' : 'Agotado'}</span>
+                            <span>🛒 {t('addToCart')}</span>
                           </button>
                         </div>
                       </div>
@@ -276,7 +332,7 @@ const CompatibilityAssistant = () => {
               )}
             </div>
           )}
-        </>
+        </div>
       )}
     </div>
   );

@@ -1,24 +1,13 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import CompatibilityAssistant from './components/CompatibilityAssistant'
-import CartDrawer from './components/CartDrawer'
+import App from './App'
 import './index.css'
 
-const assistantRoot = document.getElementById('react-compatibility-assistant')
-if (assistantRoot) {
-  ReactDOM.createRoot(assistantRoot).render(
+const rootElement = document.getElementById('root')
+if (rootElement) {
+  ReactDOM.createRoot(rootElement).render(
     <React.StrictMode>
-      <CompatibilityAssistant />
+      <App />
     </React.StrictMode>
   )
 }
-
-const cartRoot = document.getElementById('react-cart-container')
-if (cartRoot) {
-  ReactDOM.createRoot(cartRoot).render(
-    <React.StrictMode>
-      <CartDrawer />
-    </React.StrictMode>
-  )
-}
-
