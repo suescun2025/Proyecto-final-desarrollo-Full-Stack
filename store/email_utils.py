@@ -222,9 +222,9 @@ def send_order_notification_email_async(order):
                         logger.error(f"Error adjuntando imagen CID {cid_id}: {e}")
 
             # =========================================================
-            # 1. ENVIAR CORREO AL ADMINISTRADOR DE LA TIENDA (Solo si es un email distinto al del cliente)
+            # 1. ENVIAR CORREO AL ADMINISTRADOR DE LA TIENDA
             # =========================================================
-            if owner_email and owner_email != user_email:
+            if owner_email:
                 admin_subject = f"⚡ [ADMIN] ¡Nuevo Pedido Recibido #{order_id}! - TechMatch"
                 admin_text_body = f"""
 ==================================================
@@ -310,16 +310,19 @@ TechMatch Store • Panel de Gestión
                 </html>
                 """
 
-                admin_email_msg = EmailMultiAlternatives(
-                    subject=admin_subject,
-                    body=admin_text_body,
-                    from_email=from_email,
-                    to=[owner_email]
-                )
-                admin_email_msg.attach_alternative(admin_html_body, "text/html")
-                attach_cids_to_email(admin_email_msg)
-                admin_email_msg.send(fail_silently=True)
-                logger.info(f"[Email Notification] Admin email sent to {owner_email} for order #{order_id}")
+                try:
+                    admin_email_msg = EmailMultiAlternatives(
+                        subject=admin_subject,
+                        body=admin_text_body,
+                        from_email=from_email,
+                        to=[owner_email]
+                    )
+                    admin_email_msg.attach_alternative(admin_html_body, "text/html")
+                    attach_cids_to_email(admin_email_msg)
+                    admin_email_msg.send(fail_silently=False)
+                    logger.info(f"[Email Notification] Admin email sent to {owner_email} for order #{order_id}")
+                except Exception as ex_admin:
+                    logger.error(f"[Email Notification Error] Failed to send admin email to {owner_email}: {ex_admin}")
 
             # =========================================================
             # 2. ENVIAR CORREO AL CLIENTE (SIN BOTÓN DE ADMIN, CON BOTÓN CANCELAR)
@@ -414,16 +417,19 @@ TechMatch Store • Gracias por tu confianza
                 </html>
                 """
 
-                cust_email_msg = EmailMultiAlternatives(
-                    subject=cust_subject,
-                    body=cust_text_body,
-                    from_email=from_email,
-                    to=[user_email]
-                )
-                cust_email_msg.attach_alternative(cust_html_body, "text/html")
-                attach_cids_to_email(cust_email_msg)
-                cust_email_msg.send(fail_silently=True)
-                logger.info(f"[Email Notification] Customer email sent to {user_email} for order #{order_id}")
+                try:
+                    cust_email_msg = EmailMultiAlternatives(
+                        subject=cust_subject,
+                        body=cust_text_body,
+                        from_email=from_email,
+                        to=[user_email]
+                    )
+                    cust_email_msg.attach_alternative(cust_html_body, "text/html")
+                    attach_cids_to_email(cust_email_msg)
+                    cust_email_msg.send(fail_silently=False)
+                    logger.info(f"[Email Notification] Customer email sent to {user_email} for order #{order_id}")
+                except Exception as ex_cust:
+                    logger.error(f"[Email Notification Error] Failed to send customer email to {user_email}: {ex_cust}")
 
         except Exception as e:
             logger.error(f"[Email Notification Error] Failed to send order #{order.id} email: {e}")
