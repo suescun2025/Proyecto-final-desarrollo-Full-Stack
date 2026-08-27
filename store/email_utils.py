@@ -85,76 +85,32 @@ def build_cid_attachments(items, order_id):
                 raw_src = ""
 
         cid_src = None
-        cid_id = f"item_img_{order_id}_{idx}"
-
-        # 1. Caso base64
-        if raw_src and raw_src.startswith('data:image'):
-            cid_src = raw_src
-
-        # 2. Caso URL remota (http:// o https://)
-        if not cid_src and raw_src and (raw_src.startswith('http://') or raw_src.startswith('https://')):
-            if '127.0.0.1:8000' in raw_src or 'localhost:8000' in raw_src:
-                raw_src = raw_src.split('8000')[-1]
-            else:
+        if raw_src and (raw_src.startswith('http://') or raw_src.startswith('https://')):
+            if not ('127.0.0.1' in raw_src or 'localhost' in raw_src):
                 cid_src = raw_src
 
-        # 3. Caso archivo local en disco
-        if not cid_src:
-            candidate_paths = []
-            if raw_src:
-                clean_path = raw_src.lstrip('/')
-                clean_path_no_static = clean_path.replace('static/', '')
-                clean_path_no_media = clean_path.replace('media/', '')
-                
-                candidate_paths.extend([
-                    os.path.join(settings.BASE_DIR, clean_path),
-                    os.path.join(settings.BASE_DIR, 'frontend', 'public', clean_path_no_static),
-                    os.path.join(settings.BASE_DIR, 'frontend', 'public', clean_path),
-                    os.path.join(settings.BASE_DIR, 'staticfiles', clean_path_no_static),
-                    os.path.join(settings.BASE_DIR, 'staticfiles', clean_path),
-                    os.path.join(settings.BASE_DIR, 'media', clean_path_no_media),
-                    os.path.join(settings.BASE_DIR, 'media', 'products', os.path.basename(clean_path)),
-                ])
+        icon_emoji = "📦"
+        p_name_lower = p_name.lower()
+        c_model_lower = (c_model or "").lower()
+        if c_model or "personalizada" in p_name_lower or "carcasa" in p_name_lower or "fundas" in p_name_lower:
+            icon_emoji = "🎨"
+        elif "macbook" in p_name_lower or "thinkpad" in p_name_lower or "laptop" in p_name_lower or "macbook" in c_model_lower:
+            icon_emoji = "💻"
+        elif "iphone" in p_name_lower or "samsung" in p_name_lower or "galaxy" in p_name_lower or "iphone" in c_model_lower or "samsung" in c_model_lower:
+            icon_emoji = "📱"
+        elif "cargador" in p_name_lower or "cable" in p_name_lower or "adaptador" in p_name_lower or "magsafe" in p_name_lower:
+            icon_emoji = "🔌"
 
-            fallback_filename = 'customcase.jpg'
-            if item.custom_model:
-                c_model_lower = item.custom_model.lower()
-                if 'macbook' in c_model_lower or 'mac' in c_model_lower:
-                    fallback_filename = 'dev_macbook.jpg'
-                elif 'ipad' in c_model_lower:
-                    fallback_filename = 'dev_ipadpro.jpg'
-                elif 'iphone' in c_model_lower:
-                    fallback_filename = 'dev_iphone16.jpg'
-                elif 'samsung' in c_model_lower or 'ultra' in c_model_lower:
-                    fallback_filename = 'dev_s25ultra.jpg'
-
-            candidate_paths.append(os.path.join(settings.BASE_DIR, 'media', 'products', fallback_filename))
-            candidate_paths.append(os.path.join(settings.BASE_DIR, 'media', 'products', 'customcase.jpg'))
-
-            for target_path in candidate_paths:
-                if os.path.exists(target_path) and os.path.isfile(target_path):
-                    try:
-                        with open(target_path, 'rb') as f:
-                            img_bytes = f.read()
-                        b64_str = base64.b64encode(img_bytes).decode('utf-8')
-                        mime_type = 'image/png' if target_path.endswith('.png') else 'image/jpeg'
-                        cid_src = f"data:{mime_type};base64,{b64_str}"
-                        break
-                    except Exception as e:
-                        logger.error(f"Error leyendo imagen local {target_path}: {e}")
-
-
-
-        if cid_src:
+        if cid_src and len(cid_src) < 2000:
             img_td = f"""
             <td style="padding: 10px; width: 64px; text-align: center; vertical-align: middle;">
                 <img src="{cid_src}" alt="{display_title}" style="width: 56px; height: 56px; object-fit: cover; border-radius: 8px; border: 1.5px solid #00f2fe; background: #0f172a; display: block; margin: 0 auto;" />
             </td>
             """
         else:
-            img_td = """
+            img_td = f"""
             <td style="padding: 10px; width: 64px; text-align: center; vertical-align: middle;">
-                <div style="width: 56px; height: 56px; border-radius: 8px; background: #0f172a; border: 1px solid rgba(255,255,255,0.15); display: inline-flex; align-items: center; justify-content: center; font-size: 22px;">📦</div>
+                <div style="width: 56px; height: 56px; border-radius: 8px; background: #0f172a; border: 1.5px solid #00f2fe; display: inline-block; line-height: 56px; text-align: center; font-size: 26px;">{icon_emoji}</div>
             </td>
             """
 
