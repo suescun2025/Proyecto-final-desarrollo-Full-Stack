@@ -15,4 +15,8 @@ echo "⚡ 3. Ejecutando Recolección de Archivos Estáticos y Migraciones de Dja
 python manage.py collectstatic --no-input
 python manage.py migrate
 
+echo "🌱 4. Poblando la Base de Datos con Productos, Marcas y Usuario Admin..."
+python seed_data.py
+python update_database_brands.py
+
 echo "✅ ¡Build completado con éxito para Render!"
