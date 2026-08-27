@@ -192,7 +192,7 @@ export const translations = {
     subtotal: "Subtotal",
     total: "Total",
     checkoutBtn: "Finalizar Pedido",
-    loginRequiredToCheckout: "⚠️ Debes iniciar sesión con tu cuenta para poder realizar una compra.",
+    loginRequiredToCheckout: "🔑 Debes iniciar sesión con tu cuenta de usuario (ej. Yeferson) para finalizar tu pedido y recibir tu comprobante por correo.",
     loginToContinueBtn: "🔐 Iniciar Sesión / Registrarse",
     clearCartBtn: "Vaciar Carrito",
 
