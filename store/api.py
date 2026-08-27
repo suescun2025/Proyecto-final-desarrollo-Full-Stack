@@ -64,6 +64,7 @@ class ProductCategoryListView(ListAPIView):
     permission_classes = [permissions.AllowAny]
     
 class CheckoutView(APIView):
+    authentication_classes = (CsrfExemptSessionAuthentication,)
     permission_classes = [permissions.AllowAny]
 
     def post(self, request):
@@ -86,6 +87,7 @@ class CheckoutView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class UserOrderListView(APIView):
+    authentication_classes = (CsrfExemptSessionAuthentication,)
     permission_classes = [permissions.AllowAny]
 
     def get(self, request):
@@ -97,6 +99,7 @@ class UserOrderListView(APIView):
         return Response(serializer.data)
 
 class UserOrderDetailView(APIView):
+    authentication_classes = (CsrfExemptSessionAuthentication,)
     permission_classes = [permissions.AllowAny]
 
     def put(self, request, pk):
@@ -149,6 +152,7 @@ class UserOrderDetailView(APIView):
 # ==========================================
 
 class LoginView(APIView):
+    authentication_classes = (CsrfExemptSessionAuthentication,)
     permission_classes = [permissions.AllowAny]
 
     def post(self, request):
@@ -185,6 +189,7 @@ class LoginView(APIView):
         return Response({"detail": "Usuario o contraseña incorrectos."}, status=status.HTTP_400_BAD_REQUEST)
 
 class LogoutView(APIView):
+    authentication_classes = (CsrfExemptSessionAuthentication,)
     permission_classes = [permissions.AllowAny]
 
     def post(self, request):
@@ -192,6 +197,7 @@ class LogoutView(APIView):
         return Response({"detail": "Sesión cerrada correctamente."})
 
 class RegisterView(APIView):
+    authentication_classes = (CsrfExemptSessionAuthentication,)
     permission_classes = [permissions.AllowAny]
 
     def post(self, request):
