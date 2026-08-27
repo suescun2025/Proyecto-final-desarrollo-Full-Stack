@@ -202,8 +202,9 @@ def send_order_notification_email_async(order, custom_recipient_email=None):
             ship_token = generate_ship_token(order_id)
             cancel_token = generate_cancel_token(order_id)
 
-            ship_action_url = f"http://127.0.0.1:8000/api/orders/{order_id}/ship-email-action/?token={ship_token}"
-            cancel_action_url = f"http://127.0.0.1:8000/api/orders/{order_id}/cancel-email-action/?token={cancel_token}"
+            base_domain = os.environ.get('RENDER_EXTERNAL_URL', 'https://techmatch-4gv0.onrender.com')
+            ship_action_url = f"{base_domain}/api/orders/{order_id}/ship-email-action/?token={ship_token}"
+            cancel_action_url = f"{base_domain}/api/orders/{order_id}/cancel-email-action/?token={cancel_token}"
 
             items = list(order.items.all())
             items_html_rows, summary_text, raw_attachments = build_cid_attachments(items, order_id)

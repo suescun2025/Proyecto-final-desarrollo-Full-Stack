@@ -458,6 +458,7 @@ class OrderShipEmailActionView(APIView):
         send_order_shipped_email_async(order)
 
         user_name = order.user.username if order.user else 'Cliente'
+        base_domain = os.environ.get('RENDER_EXTERNAL_URL', 'https://techmatch-4gv0.onrender.com')
         
         html_response = f"""
         <!DOCTYPE html>
@@ -475,7 +476,7 @@ class OrderShipEmailActionView(APIView):
                 <p style="color: #cbd5e1; font-size: 15px; line-height: 1.6;">El estado del pedido para el cliente <strong>{user_name}</strong> ha sido actualizado correctamente a <strong style="color: #00f2fe;">ENVIADO / EN CAMINO</strong>.</p>
                 <p style="color: #94a3b8; font-size: 13px; margin-top: 18px;">El cliente ha recibido su e-mail de confirmación y el cambio se refleja en tiempo real en la tienda web.</p>
                 <div style="margin-top: 30px;">
-                    <a href="http://127.0.0.1:8000/orders/" style="display: inline-block; background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%); color: #0b0f19; font-weight: 800; padding: 14px 28px; border-radius: 30px; text-decoration: none; box-shadow: 0 4px 15px rgba(0, 242, 254, 0.4);">
+                    <a href="{base_domain}/orders/" style="display: inline-block; background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%); color: #0b0f19; font-weight: 800; padding: 14px 28px; border-radius: 30px; text-decoration: none; box-shadow: 0 4px 15px rgba(0, 242, 254, 0.4);">
                         🌐 Ir a TechMatch Store
                     </a>
                 </div>
@@ -493,13 +494,15 @@ class OrderCancelEmailActionView(APIView):
 
     def get(self, request, pk):
         token = request.query_params.get('token', '')
+        base_domain = os.environ.get('RENDER_EXTERNAL_URL', 'https://techmatch-4gv0.onrender.com')
+
         try:
             order = Order.objects.get(pk=pk)
         except Order.DoesNotExist:
-            return HttpResponse("<h2 style='color:#ef4444; font-family:sans-serif; text-align:center; margin-top:50px;'>❌ Pedido no encontrado.</h2>", status=404)
+            return HttpResponse(f"<div style='background:#0b0f19; font-family:sans-serif; color:#fff; min-height:100vh; display:flex; align-items:center; justify-content:center; text-align:center;'><div><h2 style='color:#ef4444;'>❌ Pedido #{pk} no encontrado o ya eliminado.</h2><br/><a href='{base_domain}/orders/' style='color:#00f2fe; font-weight:bold;'>🌐 Volver a TechMatch Store</a></div></div>", status=404)
 
         if not verify_cancel_token(order.id, token) and not (request.user and request.user.is_authenticated and (request.user == order.user or request.user.is_staff)):
-            return HttpResponse("<h2 style='color:#ef4444; font-family:sans-serif; text-align:center; margin-top:50px;'>⚠️ Enlace de cancelación no válido o expirado.</h2>", status=403)
+            return HttpResponse(f"<div style='background:#0b0f19; font-family:sans-serif; color:#fff; min-height:100vh; display:flex; align-items:center; justify-content:center; text-align:center;'><div><h2 style='color:#ef4444;'>⚠️ Enlace de cancelación no válido o expirado.</h2><br/><a href='{base_domain}/orders/' style='color:#00f2fe; font-weight:bold;'>🌐 Volver a TechMatch Store</a></div></div>", status=403)
 
         user_name = order.user.username if order.user else 'Cliente'
 
@@ -523,7 +526,7 @@ class OrderCancelEmailActionView(APIView):
                         <p style="margin: 4px 0 0 0; color: #ffffff; font-size: 14px;">"{order.cancellation_reason or 'No especificado'}"</p>
                     </div>
                     <div style="margin-top: 30px;">
-                        <a href="http://127.0.0.1:8000/orders/" style="display: inline-block; background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%); color: #0b0f19; font-weight: 800; padding: 12px 26px; border-radius: 30px; text-decoration: none; box-shadow: 0 4px 15px rgba(0, 242, 254, 0.4);">🌐 Ir a Mis Pedidos</a>
+                        <a href="{base_domain}/orders/" style="display: inline-block; background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%); color: #0b0f19; font-weight: 800; padding: 12px 26px; border-radius: 30px; text-decoration: none; box-shadow: 0 4px 15px rgba(0, 242, 254, 0.4);">🌐 Ir a Mis Pedidos</a>
                     </div>
                 </div>
             </body>
@@ -560,7 +563,7 @@ class OrderCancelEmailActionView(APIView):
                 </form>
 
                 <div style="text-align: center; margin-top: 24px;">
-                    <a href="http://127.0.0.1:8000/orders/" style="color: #94a3b8; font-size: 13px; text-decoration: underline;">Volver a la tienda sin cancelar</a>
+                    <a href="{base_domain}/orders/" style="color: #94a3b8; font-size: 13px; text-decoration: underline;">Volver a la tienda sin cancelar</a>
                 </div>
             </div>
         </body>
@@ -571,14 +574,15 @@ class OrderCancelEmailActionView(APIView):
     def post(self, request, pk):
         token = request.POST.get('token', '') or request.query_params.get('token', '')
         reason = request.POST.get('reason', '').strip() or (request.data.get('reason', '').strip() if hasattr(request, 'data') else '')
+        base_domain = os.environ.get('RENDER_EXTERNAL_URL', 'https://techmatch-4gv0.onrender.com')
 
         try:
             order = Order.objects.get(pk=pk)
         except Order.DoesNotExist:
-            return HttpResponse("<h2 style='color:#ef4444; font-family:sans-serif; text-align:center; margin-top:50px;'>❌ Pedido no encontrado.</h2>", status=404)
+            return HttpResponse(f"<div style='background:#0b0f19; font-family:sans-serif; color:#fff; min-height:100vh; display:flex; align-items:center; justify-content:center; text-align:center;'><div><h2 style='color:#ef4444;'>❌ Pedido #{pk} no encontrado.</h2><br/><a href='{base_domain}/orders/' style='color:#00f2fe; font-weight:bold;'>🌐 Volver a TechMatch Store</a></div></div>", status=404)
 
         if not verify_cancel_token(order.id, token) and not (request.user and request.user.is_authenticated and (request.user == order.user or request.user.is_staff)):
-            return HttpResponse("<h2 style='color:#ef4444; font-family:sans-serif; text-align:center; margin-top:50px;'>⚠️ Token de cancelación no válido.</h2>", status=403)
+            return HttpResponse(f"<div style='background:#0b0f19; font-family:sans-serif; color:#fff; min-height:100vh; display:flex; align-items:center; justify-content:center; text-align:center;'><div><h2 style='color:#ef4444;'>⚠️ Token de cancelación no válido.</h2><br/><a href='{base_domain}/orders/' style='color:#00f2fe; font-weight:bold;'>🌐 Volver a TechMatch Store</a></div></div>", status=403)
 
         old_status = order.status
         order.status = 'CANCELLED'
@@ -612,7 +616,7 @@ class OrderCancelEmailActionView(APIView):
                     <p style="margin: 6px 0 0 0; color: #ffffff; font-size: 14px;">"{reason or 'Sin motivo proporcionado'}"</p>
                 </div>
                 <div style="margin-top: 30px;">
-                    <a href="http://127.0.0.1:8000/orders/" style="display: inline-block; background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%); color: #0b0f19; font-weight: 800; padding: 14px 28px; border-radius: 30px; text-decoration: none; box-shadow: 0 4px 15px rgba(0, 242, 254, 0.4);">
+                    <a href="{base_domain}/orders/" style="display: inline-block; background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%); color: #0b0f19; font-weight: 800; padding: 14px 28px; border-radius: 30px; text-decoration: none; box-shadow: 0 4px 15px rgba(0, 242, 254, 0.4);">
                         🌐 Ir a Mis Pedidos en TechMatch
                     </a>
                 </div>
