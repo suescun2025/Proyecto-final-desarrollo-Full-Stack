@@ -17,7 +17,8 @@ export default function MyOrdersPage({ currentLang, translations, navigateTo }) 
       });
       if (res.ok) {
         const data = await res.json();
-        setOrders(data);
+        const activeOrders = data.filter(o => o.status !== 'CANCELLED');
+        setOrders(activeOrders);
       }
     } catch (err) {
       console.error("Error al obtener pedidos:", err);
