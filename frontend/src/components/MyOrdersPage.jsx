@@ -322,27 +322,6 @@ export default function MyOrdersPage({ currentLang, translations, navigateTo }) 
                       {deletingId === order.id ? '⏳ Cancelando...' : '🗑️ Cancelar Pedido'}
                     </button>
 
-                    {/* Botón de Simulación para Demo Admin */}
-                    {isPending && (
-                      <button
-                        onClick={() => handleSimulateShipment(order.id)}
-                        disabled={simulatingId === order.id}
-                        title="Simular la confirmación de envío enviada por el administrador"
-                        style={{
-                          background: 'linear-gradient(135deg, rgba(0, 242, 254, 0.2) 0%, rgba(79, 172, 254, 0.2) 100%)',
-                          border: '1px solid var(--color-accent)',
-                          color: 'var(--color-accent)',
-                          padding: '6px 12px',
-                          borderRadius: '8px',
-                          fontSize: '12px',
-                          fontWeight: '700',
-                          cursor: 'pointer',
-                          transition: 'all 0.2s ease'
-                        }}
-                      >
-                        {simulatingId === order.id ? '⚡ Enviando...' : '⚡ Simular Envío (Admin)'}
-                      </button>
-                    )}
                   </div>
                 </div>
 
