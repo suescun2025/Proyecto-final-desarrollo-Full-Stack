@@ -50,22 +50,24 @@ def seed():
     DeviceModel.objects.all().delete()
     DeviceBrand.objects.all().delete()
 
-    # 2. Crear Superusuario (Administrador) si no existe
-    if not User.objects.filter(username='admin').exists():
-        User.objects.create_superuser('admin', 'admin@techmatch.com', 'admin123')
-        print("- Superusuario creado: admin / admin123")
-    else:
-        print("- El superusuario 'admin' ya existe")
+    # 2. Configuración de cuentas y permisos por defecto
+    admin_u, _ = User.objects.get_or_create(username='admin')
+    admin_u.set_password('admin123')
+    admin_u.email = 'admin@techmatch.com'
+    admin_u.is_staff = True
+    admin_u.is_superuser = True
+    admin_u.save()
+    print("- Cuenta de Administrador configurada: admin / admin123")
 
-    # Configurar cuenta principal Yeferson (Administrador)
+    # Configurar cuenta Cliente Yeferson (Comprador Estándar)
     for u_name in ['Yeferson', 'yeferson']:
         u_obj, _ = User.objects.get_or_create(username=u_name)
         u_obj.set_password('1234')
-        u_obj.is_staff = True
-        u_obj.is_superuser = True
+        u_obj.is_staff = False
+        u_obj.is_superuser = False
         u_obj.email = 'suescunyeferson32@gmail.com'
         u_obj.save()
-    print("- Usuario Administrador 'Yeferson' y 'yeferson' configurados con contraseña '1234'")
+    print("- Cuenta de Cliente 'Yeferson' y 'yeferson' configuradas con contraseña '1234'")
 
     # 3. Marcas de Dispositivos (Reconocidas a nivel mundial con logos oficiales)
     apple = DeviceBrand.objects.create(name="Apple", logo="brands/apple.png")
