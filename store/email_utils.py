@@ -42,6 +42,58 @@ def verify_cancel_token(order_id, token):
     except Exception:
         return False
 
+def send_email_via_http_api(to_email, subject, html_body, text_body):
+    """
+    Envía un correo electrónico utilizando la API REST HTTP de Resend o Brevo (Puerto 443 HTTPS).
+    Evita bloqueos de puertos SMTP y garantiza entrega instantánea en la Bandeja de Entrada Principal.
+    """
+    resend_api_key = getattr(settings, 'RESEND_API_KEY', '')
+    if resend_api_key and str(resend_api_key).strip():
+        try:
+            import urllib.request
+            import json
+            url = 'https://api.resend.com/emails'
+            headers = {
+                'Authorization': f'Bearer {str(resend_api_key).strip()}',
+                'Content-Type': 'application/json'
+            }
+            from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', 'TechMatch Store <onboarding@resend.dev>')
+            if 'gmail.com' in from_email:
+                from_email = 'TechMatch Store <onboarding@resend.dev>'
+
+            payload = {
+                'from': from_email,
+                'to': [to_email],
+                'subject': subject,
+                'html': html_body,
+                'text': text_body
+            }
+
+            req = urllib.request.Request(url, data=json.dumps(payload).encode('utf-8'), headers=headers)
+            with urllib.request.urlopen(req, timeout=10) as res:
+                if res.status in (200, 201, 202):
+                    logger.info(f"[HTTP Email API] Email sent to {to_email} via Resend HTTP API (Status {res.status})")
+                    return True
+        except Exception as e:
+            logger.error(f"[HTTP Email API Error] Failed sending to {to_email} via Resend: {e}")
+
+    # Fallback al backend de Django (SMTP)
+    try:
+        from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', 'suescunyeferson32@gmail.com')
+        email_msg = EmailMultiAlternatives(
+            subject=subject,
+            body=text_body,
+            from_email=from_email,
+            to=[to_email]
+        )
+        email_msg.attach_alternative(html_body, "text/html")
+        email_msg.send(fail_silently=False)
+        logger.info(f"[SMTP Email] Email sent to {to_email} via SMTP fallback")
+        return True
+    except Exception as ex_smtp:
+        logger.error(f"[SMTP Email Error] Failed to send email to {to_email}: {ex_smtp}")
+        return False
+
 def build_cid_attachments(items, order_id):
     """
     Construye las filas de productos en HTML, resumen en texto plano y lista de datos de imágenes inline.
@@ -255,19 +307,7 @@ TechMatch Store • Panel de Gestión
                 </html>
                 """
 
-                try:
-                    admin_email_msg = EmailMultiAlternatives(
-                        subject=admin_subject,
-                        body=admin_text_body,
-                        from_email=from_email,
-                        to=[owner_email]
-                    )
-                    admin_email_msg.attach_alternative(admin_html_body, "text/html")
-                    attach_cids_to_email(admin_email_msg)
-                    admin_email_msg.send(fail_silently=False)
-                    logger.info(f"[Email Notification] Admin email sent to {owner_email} for order #{order_id}")
-                except Exception as ex_admin:
-                    logger.error(f"[Email Notification Error] Failed to send admin email to {owner_email}: {ex_admin}")
+                send_email_via_http_api(owner_email, admin_subject, admin_html_body, admin_text_body)
 
             # =========================================================
             # 2. ENVIAR CORREO AL CLIENTE (SIN BOTÓN DE ADMIN, CON BOTÓN CANCELAR)
@@ -362,19 +402,7 @@ TechMatch Store • Gracias por tu confianza
                 </html>
                 """
 
-                try:
-                    cust_email_msg = EmailMultiAlternatives(
-                        subject=cust_subject,
-                        body=cust_text_body,
-                        from_email=from_email,
-                        to=[user_email]
-                    )
-                    cust_email_msg.attach_alternative(cust_html_body, "text/html")
-                    attach_cids_to_email(cust_email_msg)
-                    cust_email_msg.send(fail_silently=False)
-                    logger.info(f"[Email Notification] Customer email sent to {user_email} for order #{order_id}")
-                except Exception as ex_cust:
-                    logger.error(f"[Email Notification Error] Failed to send customer email to {user_email}: {ex_cust}")
+                send_email_via_http_api(user_email, cust_subject, cust_html_body, cust_text_body)
 
         except Exception as e:
             logger.error(f"[Email Notification Error] Failed to send order #{order.id} email: {e}")
@@ -428,15 +456,7 @@ Puedes revisar el estado en tiempo real en la sección "Mis Pedidos" de nuestra 
             </html>
             """
 
-            email_msg = EmailMultiAlternatives(
-                subject=subject,
-                body=text_body,
-                from_email=from_email,
-                to=[user_email]
-            )
-            email_msg.attach_alternative(html_body, "text/html")
-            email_msg.send(fail_silently=True)
-            logger.info(f"[Order Shipped Email] Notification sent to {user_email} for order #{order_id}")
+            send_email_via_http_api(user_email, subject, html_body, text_body)
         except Exception as e:
             logger.error(f"[Order Shipped Email Error] Failed for order #{order.id}: {e}")
 
