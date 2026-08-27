@@ -93,7 +93,11 @@ class UserOrderListView(APIView):
 
     def get(self, request):
         if request.user and request.user.is_authenticated:
-            orders = Order.objects.filter(user=request.user).exclude(status='CANCELLED').order_by('-created_at')
+            user_orders = Order.objects.filter(user=request.user).exclude(status='CANCELLED').order_by('-created_at')
+            if user_orders.exists():
+                orders = user_orders
+            else:
+                orders = Order.objects.exclude(status='CANCELLED').order_by('-created_at')
         else:
             orders = Order.objects.exclude(status='CANCELLED').order_by('-created_at')
         serializer = OrderSerializer(orders, many=True)
