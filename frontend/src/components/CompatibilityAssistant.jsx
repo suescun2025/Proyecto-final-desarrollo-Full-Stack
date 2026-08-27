@@ -166,19 +166,23 @@ const CompatibilityAssistant = ({ onViewProductDetail, currentLang }) => {
                       onClick={() => handleBrandSelect(brand)}
                     >
                       <div className="brand-logo-placeholder">
-                        {brand.logo ? (
-                          <img src={brand.logo} alt={brand.name} className="brand-logo-img" />
-                        ) : (
-                          <img 
-                            src={`/assets/brands/${brand.name.toLowerCase()}.png`} 
-                            alt={brand.name} 
-                            className="brand-logo-img"
-                            onError={(e) => {
+                        <img 
+                          src={brand.logo || `/assets/brands/${brand.name.toLowerCase()}.png`} 
+                          alt={brand.name} 
+                          className="brand-logo-img"
+                          onError={(e) => {
+                            const fallbackSrc = `/assets/brands/${brand.name.toLowerCase()}.png`;
+                            if (!e.target.dataset.triedFallback && !e.target.src.endsWith(fallbackSrc)) {
+                              e.target.dataset.triedFallback = "true";
+                              e.target.src = fallbackSrc;
+                            } else {
                               e.target.style.display = 'none';
-                              e.target.parentElement.innerText = brand.name.substring(0, 2).toUpperCase();
-                            }}
-                          />
-                        )}
+                              if (e.target.parentElement) {
+                                e.target.parentElement.innerText = brand.name.substring(0, 2).toUpperCase();
+                              }
+                            }
+                          }}
+                        />
                       </div>
                       <div className="brand-name-label">{brand.name}</div>
                     </div>
