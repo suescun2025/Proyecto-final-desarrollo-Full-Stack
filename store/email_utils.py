@@ -198,7 +198,7 @@ def send_order_notification_email_async(order, custom_recipient_email=None):
             total_val = f"{order.total:.2f}"
             shipping_addr = order.shipping_address if order.shipping_address else 'Dirección Estándar de Entrega'
             owner_email = getattr(settings, 'STORE_OWNER_EMAIL', 'suescunyeferson32@gmail.com')
-            from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', 'TechMatch Store <suescunyeferson32@gmail.com>')
+            from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', 'suescunyeferson32@gmail.com')
             raw_user_email = custom_recipient_email or (order.user.email if (order.user and order.user.email) else None)
             user_email = raw_user_email if (raw_user_email and '@' in raw_user_email) else owner_email
 
@@ -454,7 +454,7 @@ def send_order_shipped_email_async(order):
             if not user_email:
                 return
 
-            from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', 'TechMatch Store <suescunyeferson32@gmail.com>')
+            from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', 'suescunyeferson32@gmail.com')
             subject = f"📦 ¡Tu Pedido TechMatch #{order_id} ha sido ENVIADO!"
             
             text_body = f"""
