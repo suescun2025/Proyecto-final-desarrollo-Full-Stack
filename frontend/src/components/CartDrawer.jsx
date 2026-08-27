@@ -72,18 +72,6 @@ const CartDrawer = ({ currentLang, user, onOpenAuth }) => {
   };
 
   const handleCheckout = async () => {
-    const isAuth = user?.isAuthenticated || window.isAuthenticated || false;
-    if (!isAuth) {
-      setMessage(t('loginRequiredToCheckout'));
-      setMessageType('auth-required');
-      if (onOpenAuth) {
-        setTimeout(() => {
-          onOpenAuth();
-        }, 300);
-      }
-      return;
-    }
-
     const finalAddress = shippingAddress.trim() || 'Entrega Directa (Demostración en Vivo Academia)';
 
     setLoading(true);
