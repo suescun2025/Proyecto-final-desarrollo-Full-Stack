@@ -135,35 +135,39 @@ def build_cid_attachments(items, order_id):
             except Exception:
                 raw_src = ""
 
+        base_domain = "https://techmatch-4gv0.onrender.com"
         cid_src = None
-        if raw_src and (raw_src.startswith('http://') or raw_src.startswith('https://')):
-            if not ('127.0.0.1' in raw_src or 'localhost' in raw_src):
-                cid_src = raw_src
 
-        icon_emoji = "📦"
-        p_name_lower = p_name.lower()
-        c_model_lower = (c_model or "").lower()
-        if c_model or "personalizada" in p_name_lower or "carcasa" in p_name_lower or "fundas" in p_name_lower:
-            icon_emoji = "🎨"
-        elif "macbook" in p_name_lower or "thinkpad" in p_name_lower or "laptop" in p_name_lower or "macbook" in c_model_lower:
-            icon_emoji = "💻"
-        elif "iphone" in p_name_lower or "samsung" in p_name_lower or "galaxy" in p_name_lower or "iphone" in c_model_lower or "samsung" in c_model_lower:
-            icon_emoji = "📱"
-        elif "cargador" in p_name_lower or "cable" in p_name_lower or "adaptador" in p_name_lower or "magsafe" in p_name_lower:
-            icon_emoji = "🔌"
+        if raw_src:
+            if raw_src.startswith('http://') or raw_src.startswith('https://'):
+                if '127.0.0.1' in raw_src or 'localhost' in raw_src:
+                    path_part = raw_src.split(':8000')[-1] if ':8000' in raw_src else raw_src
+                    cid_src = f"{base_domain}{path_part}"
+                else:
+                    cid_src = raw_src
+            else:
+                clean_path = raw_src if raw_src.startswith('/') else f"/{raw_src}"
+                cid_src = f"{base_domain}{clean_path}"
 
-        if cid_src and len(cid_src) < 2000:
-            img_td = f"""
-            <td style="padding: 10px; width: 64px; text-align: center; vertical-align: middle;">
-                <img src="{cid_src}" alt="{display_title}" style="width: 56px; height: 56px; object-fit: cover; border-radius: 8px; border: 1.5px solid #00f2fe; background: #0f172a; display: block; margin: 0 auto;" />
-            </td>
-            """
-        else:
-            img_td = f"""
-            <td style="padding: 10px; width: 64px; text-align: center; vertical-align: middle;">
-                <div style="width: 56px; height: 56px; border-radius: 8px; background: #0f172a; border: 1.5px solid #00f2fe; display: inline-block; line-height: 56px; text-align: center; font-size: 26px;">{icon_emoji}</div>
-            </td>
-            """
+        if not cid_src:
+            fallback_file = "customcase.jpg"
+            if c_model:
+                c_model_lower = c_model.lower()
+                if 'macbook' in c_model_lower or 'mac' in c_model_lower:
+                    fallback_file = "dev_macbook.jpg"
+                elif 'ipad' in c_model_lower:
+                    fallback_file = "dev_ipadpro.jpg"
+                elif 'iphone' in c_model_lower:
+                    fallback_file = "dev_iphone16.jpg"
+                elif 'samsung' in c_model_lower or 'ultra' in c_model_lower:
+                    fallback_file = "dev_s25ultra.jpg"
+            cid_src = f"{base_domain}/media/products/{fallback_file}"
+
+        img_td = f"""
+        <td style="padding: 10px; width: 64px; text-align: center; vertical-align: middle;">
+            <img src="{cid_src}" alt="{display_title}" style="width: 56px; height: 56px; object-fit: cover; border-radius: 8px; border: 1.5px solid #00f2fe; background: #0f172a; display: block; margin: 0 auto;" />
+        </td>
+        """
 
         items_html_rows += f"""
         <tr style="border-bottom: 1px solid rgba(255,255,255,0.08);">
