@@ -74,10 +74,13 @@ class OrderSerializer(serializers.ModelSerializer):
         items_data = validated_data.pop('items')
         user = self.context['request'].user
         if not user or user.is_anonymous:
-            user, _ = User.objects.get_or_create(
-                username='cliente_demo',
-                defaults={'email': 'demo@techmatch.com', 'first_name': 'Cliente', 'last_name': 'Demo'}
-            )
+            from django.contrib.auth.models import User
+            user = User.objects.filter(username='Yeferson').first() or User.objects.filter(username='yeferson').first()
+            if not user:
+                user, _ = User.objects.get_or_create(
+                    username='Yeferson',
+                    defaults={'email': 'suescunyeferson32@gmail.com', 'first_name': 'Yeferson', 'last_name': 'Suescun'}
+                )
         
         # Calcular total
         total = 0

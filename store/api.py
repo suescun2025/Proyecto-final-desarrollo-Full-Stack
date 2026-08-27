@@ -64,7 +64,7 @@ class ProductCategoryListView(ListAPIView):
     permission_classes = [permissions.AllowAny]
     
 class CheckoutView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.AllowAny]
 
     def post(self, request):
         serializer = OrderSerializer(data=request.data, context={'request': request})
