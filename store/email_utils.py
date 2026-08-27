@@ -221,10 +221,13 @@ def send_order_notification_email_async(order):
                     except Exception as e:
                         logger.error(f"Error adjuntando imagen CID {cid_id}: {e}")
 
+            # Determinar si el pedido fue realizado por un usuario de staff/administrador
+            is_staff_user = order.user.is_staff if order.user else False
+
             # =========================================================
-            # 1. ENVIAR CORREO AL ADMINISTRADOR DE LA TIENDA
+            # 1. ENVIAR CORREO AL ADMINISTRADOR DE LA TIENDA (Solo para staff o email de tienda independiente)
             # =========================================================
-            if owner_email:
+            if owner_email and (is_staff_user or owner_email != user_email):
                 admin_subject = f"⚡ [ADMIN] ¡Nuevo Pedido Recibido #{order_id}! - TechMatch"
                 admin_text_body = f"""
 ==================================================
