@@ -103,9 +103,18 @@ python manage.py migrate
 # Cargar datos iniciales de prueba (Seed Data)
 python seed_data.py
 ```
-* **Credenciales del Administrador creadas por defecto**:
-  * **Usuario**: `admin`
+
+### 🔑 Credenciales de Acceso para Pruebas
+
+#### 👑 Cuentas de Administrador (Staff / Control Total)
+* **Usuario Principal**: `Yeferson` (o `yeferson`)
+  * **Contraseña**: `1234`
+* **Usuario Secundario**: `admin`
   * **Contraseña**: `admin123`
+
+#### 👤 Cuentas de Cliente Registrado
+* **Usuario Cliente**: `cliente_demo`
+  * **Contraseña**: `1234`
 
 ### 5. Configurar y Compilar el Frontend (React)
 Accede a la carpeta del frontend, instala las dependencias de Node.js y compila los archivos estáticos:
