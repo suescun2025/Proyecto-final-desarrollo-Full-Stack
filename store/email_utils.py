@@ -89,29 +89,14 @@ def build_cid_attachments(items, order_id):
 
         # 1. Caso base64
         if raw_src and raw_src.startswith('data:image'):
-            try:
-                header, data_str = raw_src.split(';base64,')
-                img_bytes = base64.b64decode(data_str)
-                raw_attachments.append((img_bytes, cid_id, f"{cid_id}.png"))
-                cid_src = f"cid:{cid_id}"
-            except Exception as e:
-                logger.error(f"Error procesando base64 para email: {e}")
+            cid_src = raw_src
 
         # 2. Caso URL remota (http:// o https://)
         if not cid_src and raw_src and (raw_src.startswith('http://') or raw_src.startswith('https://')):
             if '127.0.0.1:8000' in raw_src or 'localhost:8000' in raw_src:
                 raw_src = raw_src.split('8000')[-1]
             else:
-                try:
-                    import urllib.request
-                    req = urllib.request.Request(raw_src, headers={'User-Agent': 'Mozilla/5.0'})
-                    with urllib.request.urlopen(req, timeout=5) as res:
-                        img_bytes = res.read()
-                    if img_bytes:
-                        raw_attachments.append((img_bytes, cid_id, f"{cid_id}.jpg"))
-                        cid_src = f"cid:{cid_id}"
-                except Exception as e:
-                    logger.error(f"Error descargando imagen remota para email {raw_src}: {e}")
+                cid_src = raw_src
 
         # 3. Caso archivo local en disco
         if not cid_src:
@@ -151,8 +136,9 @@ def build_cid_attachments(items, order_id):
                     try:
                         with open(target_path, 'rb') as f:
                             img_bytes = f.read()
-                        raw_attachments.append((img_bytes, cid_id, os.path.basename(target_path)))
-                        cid_src = f"cid:{cid_id}"
+                        b64_str = base64.b64encode(img_bytes).decode('utf-8')
+                        mime_type = 'image/png' if target_path.endswith('.png') else 'image/jpeg'
+                        cid_src = f"data:{mime_type};base64,{b64_str}"
                         break
                     except Exception as e:
                         logger.error(f"Error leyendo imagen local {target_path}: {e}")
