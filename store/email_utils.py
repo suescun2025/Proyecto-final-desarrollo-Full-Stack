@@ -47,7 +47,7 @@ def send_email_via_http_api(to_email, subject, html_body, text_body):
     Envía un correo electrónico utilizando la API REST HTTP de Resend o Brevo (Puerto 443 HTTPS).
     Evita bloqueos de puertos SMTP y garantiza entrega instantánea en la Bandeja de Entrada Principal.
     """
-    resend_api_key = getattr(settings, 'RESEND_API_KEY', '')
+    resend_api_key = getattr(settings, 'RESEND_API_KEY', '') or os.environ.get('RESEND_API_KEY', '')
     if resend_api_key and str(resend_api_key).strip():
         try:
             import urllib.request

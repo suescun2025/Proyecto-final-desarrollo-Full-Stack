@@ -38,33 +38,25 @@ export default function MyOrdersPage({ currentLang, translations, navigateTo }) 
     return () => clearInterval(interval);
   }, []);
 
-  // Función para cancelar un pedido indicando el motivo
+  // Función para cancelar y borrar un pedido instantáneamente
   const handleCancelOrder = async (orderId) => {
-    const reason = window.prompt(`¿Deseas cancelar el Pedido #${orderId}?\nPor favor, ingresa el motivo de la cancelación:`, "Cambio de opinión / Selección de modelo incorrecta");
-    if (reason === null) return;
-
     setDeletingId(orderId);
+    // Eliminar inmediatamente del estado visual (0 ms de espera para el usuario)
+    setOrders(prev => prev.filter(o => o.id !== orderId));
+    setNotificationMsg(`🗑️ El Pedido #${orderId} ha sido cancelado y eliminado de tu lista.`);
+    setTimeout(() => setNotificationMsg(null), 5000);
+
     try {
-      const res = await fetch(`/api/orders/${orderId}/`, {
-        method: 'PUT',
+      await fetch(`/api/orders/${orderId}/`, {
+        method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
           'X-CSRFToken': window.csrfToken || document.cookie.match(/csrftoken=([^;]+)/)?.[1] || ''
-        },
-        body: JSON.stringify({ cancellation_reason: reason })
+        }
       });
-
-      if (res.ok) {
-        setNotificationMsg(`🚫 El Pedido #${orderId} ha sido cancelado correctamente. Motivo: "${reason}"`);
-        await fetchOrders();
-        setTimeout(() => setNotificationMsg(null), 5000);
-      } else {
-        const data = await res.json();
-        alert(data.detail || "Error al cancelar el pedido.");
-      }
+      await fetchOrders();
     } catch (err) {
       console.error("Error al cancelar pedido:", err);
-      alert("Error de red al cancelar el pedido.");
     } finally {
       setDeletingId(null);
     }
