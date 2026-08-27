@@ -55,11 +55,10 @@ def send_email_via_http_api(to_email, subject, html_body, text_body):
             url = 'https://api.resend.com/emails'
             headers = {
                 'Authorization': f'Bearer {str(resend_api_key).strip()}',
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
             }
-            from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', 'TechMatch Store <onboarding@resend.dev>')
-            if 'gmail.com' in from_email:
-                from_email = 'TechMatch Store <onboarding@resend.dev>'
+            from_email = 'TechMatch Store <onboarding@resend.dev>'
 
             payload = {
                 'from': from_email,
