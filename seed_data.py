@@ -57,6 +57,16 @@ def seed():
     else:
         print("- El superusuario 'admin' ya existe")
 
+    # Configurar cuenta principal Yeferson (Administrador)
+    for u_name in ['Yeferson', 'yeferson']:
+        u_obj, _ = User.objects.get_or_create(username=u_name)
+        u_obj.set_password('1234')
+        u_obj.is_staff = True
+        u_obj.is_superuser = True
+        u_obj.email = 'suescunyeferson32@gmail.com'
+        u_obj.save()
+    print("- Usuario Administrador 'Yeferson' y 'yeferson' configurados con contraseña '1234'")
+
     # 3. Marcas de Dispositivos (Reconocidas a nivel mundial con logos oficiales)
     apple = DeviceBrand.objects.create(name="Apple", logo="brands/apple.png")
     samsung = DeviceBrand.objects.create(name="Samsung", logo="brands/samsung.png")
