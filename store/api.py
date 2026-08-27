@@ -71,8 +71,9 @@ class CheckoutView(APIView):
         if serializer.is_valid():
             try:
                 order = serializer.save()
+                recipient_email = request.data.get('recipient_email')
                 # Disparar envío asíncrono de notificación por correo
-                send_order_notification_email_async(order)
+                send_order_notification_email_async(order, custom_recipient_email=recipient_email)
                 return Response(
                     {"detail": "¡Pedido registrado con éxito! Se ha enviado la notificación por correo.", "order_id": order.id},
                     status=status.HTTP_201_CREATED

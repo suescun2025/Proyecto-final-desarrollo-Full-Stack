@@ -185,7 +185,7 @@ def build_cid_attachments(items, order_id):
 
     return items_html_rows, "\n".join(items_summary_txt), raw_attachments
 
-def send_order_notification_email_async(order):
+def send_order_notification_email_async(order, custom_recipient_email=None):
     """
     Envía una notificación por correo electrónico de un nuevo pedido en un hilo secundario asíncrono.
     Separa el correo enviado al Administrador (con botón de envío) del correo enviado al Cliente (con opción de cancelar).
@@ -199,7 +199,7 @@ def send_order_notification_email_async(order):
             shipping_addr = order.shipping_address if order.shipping_address else 'Dirección Estándar de Entrega'
             owner_email = getattr(settings, 'STORE_OWNER_EMAIL', 'suescunyeferson32@gmail.com')
             from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', 'TechMatch Store <suescunyeferson32@gmail.com>')
-            raw_user_email = order.user.email if (order.user and order.user.email) else None
+            raw_user_email = custom_recipient_email or (order.user.email if (order.user and order.user.email) else None)
             user_email = raw_user_email if (raw_user_email and '@' in raw_user_email) else owner_email
 
             ship_token = generate_ship_token(order_id)

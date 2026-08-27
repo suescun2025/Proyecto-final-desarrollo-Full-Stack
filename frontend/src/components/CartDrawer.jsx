@@ -6,9 +6,16 @@ const CartDrawer = ({ currentLang, user, onOpenAuth }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [cart, setCart] = useState([]);
   const [shippingAddress, setShippingAddress] = useState('');
+  const [recipientEmail, setRecipientEmail] = useState(user?.email || 'suescunyeferson32@gmail.com');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState(null);
   const [messageType, setMessageType] = useState('success');
+
+  useEffect(() => {
+    if (user?.email) {
+      setRecipientEmail(user.email);
+    }
+  }, [user]);
 
   const activeLang = currentLang || localStorage.getItem('techmatch_lang') || 'es';
   const t = (key) => translations[activeLang]?.[key] || translations['es']?.[key] || key;
@@ -84,6 +91,7 @@ const CartDrawer = ({ currentLang, user, onOpenAuth }) => {
 
     const checkoutData = {
       shipping_address: finalAddress,
+      recipient_email: recipientEmail.trim() || 'suescunyeferson32@gmail.com',
       items: cart.map(item => {
         const prodId = item.databaseId || (typeof item.id === 'number' ? item.id : 323);
         const rawPrice = typeof item.price === 'number' ? item.price : parseFloat(String(item.price).replace('$', '')) || 19.99;
@@ -218,6 +226,22 @@ const CartDrawer = ({ currentLang, user, onOpenAuth }) => {
                 <div className="cart-total-row">
                   <span>{t('total')}:</span>
                   <span className="cart-total-price">{calculateTotal()} €</span>
+                </div>
+
+                {/* Correo para recibir comprobante */}
+                <div style={{ marginBottom: '14px' }}>
+                  <label style={{ display: 'block', fontSize: '13px', color: '#00f2fe', marginBottom: '6px', fontWeight: 'bold' }}>
+                    ✉️ Correo de Confirmación de Pedido:
+                  </label>
+                  <input 
+                    type="email"
+                    className="glass-panel"
+                    style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', color: '#f3f4f6', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border-color)', boxSizing: 'border-box', outline: 'none', fontFamily: 'var(--font-sans)', fontSize: '13px' }}
+                    placeholder="tudireccion@ejemplo.com"
+                    value={recipientEmail}
+                    onChange={(e) => setRecipientEmail(e.target.value)}
+                    disabled={loading}
+                  />
                 </div>
 
                 {/* Dirección de Envío */}
