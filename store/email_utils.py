@@ -423,9 +423,8 @@ TechMatch Store • Gracias por tu confianza
         except Exception as e:
             logger.error(f"[Email Notification Error] Failed to send order #{order.id} email: {e}")
 
-    # Ejecutar en hilo secundario asíncrono
-    thread = threading.Thread(target=_send, daemon=True)
-    thread.start()
+    # Ejecutar envío directamente de forma sincrónica garantizada
+    _send()
 
 def send_order_shipped_email_async(order):
     """
@@ -485,5 +484,4 @@ Puedes revisar el estado en tiempo real en la sección "Mis Pedidos" de nuestra 
         except Exception as e:
             logger.error(f"[Order Shipped Email Error] Failed for order #{order.id}: {e}")
 
-    thread = threading.Thread(target=_send, daemon=True)
-    thread.start()
+    _send()
