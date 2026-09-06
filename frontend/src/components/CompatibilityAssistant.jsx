@@ -167,12 +167,12 @@ const CompatibilityAssistant = ({ onViewProductDetail, currentLang }) => {
                     >
                       <div className="brand-logo-placeholder">
                         <img 
-                          src={brand.logo || `/assets/brands/${brand.name.toLowerCase()}.png`} 
+                          src={brand.logo || `/static/assets/brands/${brand.name.toLowerCase()}.png`} 
                           alt={brand.name} 
                           className="brand-logo-img"
                           onError={(e) => {
-                            const fallbackSrc = `/assets/brands/${brand.name.toLowerCase()}.png`;
-                            if (!e.target.dataset.triedFallback && !e.target.src.endsWith(fallbackSrc)) {
+                            const fallbackSrc = `/static/assets/brands/${brand.name.toLowerCase()}.png`;
+                            if (!e.target.dataset.triedFallback && !e.target.src.includes(fallbackSrc)) {
                               e.target.dataset.triedFallback = "true";
                               e.target.src = fallbackSrc;
                             } else {

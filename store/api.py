@@ -1,4 +1,3 @@
-import os
 from django.http import HttpResponse
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
@@ -66,7 +65,7 @@ class ProductCategoryListView(ListAPIView):
     
 class CheckoutView(APIView):
     authentication_classes = (CsrfExemptSessionAuthentication,)
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
         serializer = OrderSerializer(data=request.data, context={'request': request})
@@ -89,27 +88,23 @@ class CheckoutView(APIView):
 
 class UserOrderListView(APIView):
     authentication_classes = (CsrfExemptSessionAuthentication,)
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
-        if request.user and request.user.is_authenticated:
-            user_orders = Order.objects.filter(user=request.user).exclude(status='CANCELLED').order_by('-created_at')
-            if user_orders.exists():
-                orders = user_orders
-            else:
-                orders = Order.objects.exclude(status='CANCELLED').order_by('-created_at')
-        else:
-            orders = Order.objects.exclude(status='CANCELLED').order_by('-created_at')
+        orders = Order.objects.filter(user=request.user).exclude(status='CANCELLED').order_by('-created_at')
         serializer = OrderSerializer(orders, many=True)
         return Response(serializer.data)
 
 class UserOrderDetailView(APIView):
     authentication_classes = (CsrfExemptSessionAuthentication,)
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [permissions.IsAuthenticated]
 
     def put(self, request, pk):
         try:
-            order = Order.objects.get(pk=pk)
+            if request.user.is_staff:
+                order = Order.objects.get(pk=pk)
+            else:
+                order = Order.objects.get(pk=pk, user=request.user)
             reason = request.data.get('cancellation_reason', '')
             old_status = order.status
             order.status = 'CANCELLED'
@@ -125,13 +120,16 @@ class UserOrderDetailView(APIView):
 
             return Response({"detail": f"Pedido #{pk} cancelado con éxito."}, status=status.HTTP_200_OK)
         except Order.DoesNotExist:
-            return Response({"detail": "Pedido no encontrado."}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"detail": "Pedido no encontrado o no tienes permiso para cancelarlo."}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, pk):
         try:
-            order = Order.objects.get(pk=pk)
+            if request.user.is_staff:
+                order = Order.objects.get(pk=pk)
+            else:
+                order = Order.objects.get(pk=pk, user=request.user)
             reason = request.query_params.get('reason', '')
             old_status = order.status
             order.status = 'CANCELLED'
@@ -147,7 +145,7 @@ class UserOrderDetailView(APIView):
 
             return Response({"detail": f"Pedido #{pk} cancelado con éxito."}, status=status.HTTP_200_OK)
         except Order.DoesNotExist:
-            return Response({"detail": "Pedido no encontrado."}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"detail": "Pedido no encontrado o no tienes permiso para cancelarlo."}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -188,6 +186,7 @@ class LoginView(APIView):
             login(request, user)
             return Response({
                 "username": user.username,
+                "email": user.email,
                 "is_staff": user.is_staff,
                 "is_authenticated": True
             })
@@ -220,6 +219,7 @@ class RegisterView(APIView):
         login(request, user)
         return Response({
             "username": user.username,
+            "email": user.email,
             "is_staff": user.is_staff,
             "is_authenticated": True
         })
@@ -296,6 +296,7 @@ class PasswordResetConfirmView(APIView):
             return Response({
                 "detail": "¡Contraseña actualizada con éxito!",
                 "username": user.username,
+                "email": user.email,
                 "is_staff": user.is_staff,
                 "is_authenticated": True
             })

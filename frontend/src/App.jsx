@@ -30,7 +30,8 @@ function App() {
   const [user, setUser] = useState({
     isAuthenticated: window.isAuthenticated || false,
     isStaff: window.isStaff || false,
-    username: window.username || ''
+    username: window.username || '',
+    email: window.userEmail || ''
   });
   
   // Estado del catálogo
@@ -260,11 +261,13 @@ function App() {
         window.isAuthenticated = true;
         window.isStaff = data.is_staff;
         window.username = data.username;
+        window.userEmail = data.email || '';
         
         setUser({
           isAuthenticated: true,
           isStaff: data.is_staff,
-          username: data.username
+          username: data.username,
+          email: data.email || ''
         });
         
         setShowAuthModal(false);
@@ -330,7 +333,8 @@ function App() {
         window.isAuthenticated = true;
         window.isStaff = data.is_staff;
         window.username = data.username;
-        setUser({ isAuthenticated: true, isStaff: data.is_staff, username: data.username });
+        window.userEmail = data.email || '';
+        setUser({ isAuthenticated: true, isStaff: data.is_staff, username: data.username, email: data.email || '' });
         setTimeout(() => {
           setShowAuthModal(false);
           setAuthMode('login');

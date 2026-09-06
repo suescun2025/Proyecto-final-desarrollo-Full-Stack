@@ -74,13 +74,7 @@ class OrderSerializer(serializers.ModelSerializer):
         items_data = validated_data.pop('items')
         user = self.context['request'].user
         if not user or user.is_anonymous:
-            from django.contrib.auth.models import User
-            user = User.objects.filter(username='Yeferson').first() or User.objects.filter(username='yeferson').first()
-            if not user:
-                user, _ = User.objects.get_or_create(
-                    username='Yeferson',
-                    defaults={'email': 'suescunyeferson32@gmail.com', 'first_name': 'Yeferson', 'last_name': 'Suescun'}
-                )
+            raise serializers.ValidationError("Debe iniciar sesión para realizar un pedido.")
         
         # Calcular total
         total = 0

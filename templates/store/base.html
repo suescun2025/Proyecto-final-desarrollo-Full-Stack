@@ -12,7 +12,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&family=Mona+Sans:wght@300;400;500;600;700&family=Rubik+Glitch&family=Kaushan+Script&family=Alex+Brush&family=Great+Vibes&family=MonteCarlo&family=Satisfy&family=Caveat:wght@600&family=Mrs+Saint+Delafield&display=swap" rel="stylesheet">
     
     <!-- Archivo de estilos de React -->
-    <link rel="stylesheet" href="{% static 'assets/index.css' %}?v=112">
+    <link rel="stylesheet" href="{% static 'assets/index.css' %}?v=114">
 </head>
 <body>
 
@@ -25,10 +25,11 @@
         window.isStaff = {{ request.user.is_staff|yesno:"true,false" }};
         window.csrfToken = "{{ csrf_token }}";
         window.username = "{{ request.user.username|escapejs }}";
+        window.userEmail = "{{ request.user.email|default:''|escapejs }}";
     </script>
     
     <!-- Código compilado de la App React -->
-    <script type="module" src="{% static 'assets/index.js' %}?v=112"></script>
+    <script type="module" src="{% static 'assets/index.js' %}?v=114"></script>
 
 
 

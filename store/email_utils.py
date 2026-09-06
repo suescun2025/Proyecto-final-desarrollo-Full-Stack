@@ -44,60 +44,39 @@ def verify_cancel_token(order_id, token):
 
 def send_email_via_http_api(to_email, subject, html_body, text_body):
     """
-    Envía un correo electrónico utilizando la API REST HTTP de Resend (Puerto 443 HTTPS).
-    Garantiza la entrega en la Bandeja de Entrada Principal. Si el destinatario no está verificado en el plan gratuito de Resend,
-    redirige una copia al correo principal configurado (suescunyeferson32@gmail.com) para evitar caer en Spam por SMTP.
+    Envía un correo electrónico utilizando la API REST HTTP de Resend o Brevo (Puerto 443 HTTPS).
+    Evita bloqueos de puertos SMTP y garantiza entrega instantánea en la Bandeja de Entrada Principal.
     """
     resend_api_key = getattr(settings, 'RESEND_API_KEY', '') or os.environ.get('RESEND_API_KEY', '')
-    owner_email = getattr(settings, 'STORE_OWNER_EMAIL', 'suescunyeferson32@gmail.com')
-
     if resend_api_key and str(resend_api_key).strip():
-        import urllib.request
-        import urllib.error
-        import json
+        try:
+            import urllib.request
+            import json
+            url = 'https://api.resend.com/emails'
+            headers = {
+                'Authorization': f'Bearer {str(resend_api_key).strip()}',
+                'Content-Type': 'application/json',
+                'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+            }
+            from_email = 'TechMatch Store <onboarding@resend.dev>'
 
-        url = 'https://api.resend.com/emails'
-        headers = {
-            'Authorization': f'Bearer {str(resend_api_key).strip()}',
-            'Content-Type': 'application/json',
-            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-        }
-        from_email = 'TechMatch Store <onboarding@resend.dev>'
-
-        def _post_resend(target_email, custom_subject, custom_html, custom_text):
             payload = {
                 'from': from_email,
-                'to': [target_email],
-                'subject': custom_subject,
-                'html': custom_html,
-                'text': custom_text
+                'to': [to_email],
+                'subject': subject,
+                'html': html_body,
+                'text': text_body
             }
+
             req = urllib.request.Request(url, data=json.dumps(payload).encode('utf-8'), headers=headers)
             with urllib.request.urlopen(req, timeout=10) as res:
-                return res.status in (200, 201, 202)
-
-        # Intento 1: Enviar al destinatario solicitado
-        try:
-            if _post_resend(to_email, subject, html_body, text_body):
-                logger.info(f"[HTTP Email API] Email sent to {to_email} via Resend HTTP API")
-                return True
-        except urllib.error.HTTPError as http_err:
-            logger.warning(f"[HTTP Email API Warning] Resend HTTP {http_err.code} for {to_email}. Re-routing to owner inbox.")
-            # Si el destinatario no es el owner (Sandbox de Resend solo permite enviar al owner), redirigimos al owner para asegurar entrega en Bandeja de Entrada sin Spam
-            if to_email != owner_email:
-                try:
-                    annotated_subject = f"[Para: {to_email}] {subject}"
-                    note_html = f"<div style='background:#0f172a; color:#00f2fe; padding:8px 12px; border-radius:6px; font-size:12px; margin-bottom:12px;'>📩 <strong>Notificación de Pedido:</strong> Destinado originalmente a <code>{to_email}</code></div>" + html_body
-                    note_text = f"[Destinatario Original: {to_email}]\n\n" + text_body
-                    if _post_resend(owner_email, annotated_subject, note_html, note_text):
-                        logger.info(f"[HTTP Email API] Email successfully redirected to owner inbox {owner_email} via Resend HTTP API")
-                        return True
-                except Exception as ex_redir:
-                    logger.error(f"[HTTP Email API Error] Redirect attempt failed: {ex_redir}")
+                if res.status in (200, 201, 202):
+                    logger.info(f"[HTTP Email API] Email sent to {to_email} via Resend HTTP API (Status {res.status})")
+                    return True
         except Exception as e:
             logger.error(f"[HTTP Email API Error] Failed sending to {to_email} via Resend: {e}")
 
-    # Fallback final al backend de Django (SMTP)
+    # Fallback al backend de Django (SMTP)
     try:
         from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', 'suescunyeferson32@gmail.com')
         email_msg = EmailMultiAlternatives(
@@ -244,9 +223,9 @@ def send_order_notification_email_async(order, custom_recipient_email=None):
             is_staff_user = order.user.is_staff if order.user else False
 
             # =========================================================
-            # 1. ENVIAR CORREO AL ADMINISTRADOR DE LA TIENDA (Solo para staff o email de tienda independiente)
+            # 1. ENVIAR CORREO AL ADMINISTRADOR DE LA TIENDA
             # =========================================================
-            if owner_email and (is_staff_user or owner_email != user_email):
+            if owner_email:
                 admin_subject = f"⚡ [ADMIN] ¡Nuevo Pedido Recibido #{order_id}! - TechMatch"
                 admin_text_body = f"""
 ==================================================

@@ -6,7 +6,7 @@ const CartDrawer = ({ currentLang, user, onOpenAuth }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [cart, setCart] = useState([]);
   const [shippingAddress, setShippingAddress] = useState('');
-  const [recipientEmail, setRecipientEmail] = useState(user?.email || 'suescunyeferson32@gmail.com');
+  const [recipientEmail, setRecipientEmail] = useState(user?.email || '');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState(null);
   const [messageType, setMessageType] = useState('success');
@@ -72,14 +72,21 @@ const CartDrawer = ({ currentLang, user, onOpenAuth }) => {
   };
 
   const handleCheckout = async () => {
+    if (!user || !user.isAuthenticated) {
+      setMessage(t('loginRequiredToCheckout'));
+      setMessageType('auth-required');
+      return;
+    }
+
     const finalAddress = shippingAddress.trim() || 'Entrega Directa (Demostración en Vivo Academia)';
+    const finalEmail = recipientEmail.trim() || user?.email || 'suescunyeferson32@gmail.com';
 
     setLoading(true);
     setMessage(null);
 
     const checkoutData = {
       shipping_address: finalAddress,
-      recipient_email: recipientEmail.trim() || 'suescunyeferson32@gmail.com',
+      recipient_email: finalEmail,
       items: cart.map(item => {
         const prodId = item.databaseId || (typeof item.id === 'number' ? item.id : 323);
         const rawPrice = typeof item.price === 'number' ? item.price : parseFloat(String(item.price).replace('$', '')) || 19.99;
@@ -116,6 +123,9 @@ const CartDrawer = ({ currentLang, user, onOpenAuth }) => {
           setIsOpen(false);
           setMessage(null);
         }, 3000);
+      } else if (response.status === 401 || response.status === 403) {
+        setMessage(t('loginRequiredToCheckout'));
+        setMessageType('auth-required');
       } else {
         throw new Error(data.detail || JSON.stringify(data));
       }
