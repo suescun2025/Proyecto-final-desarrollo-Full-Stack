@@ -104,7 +104,7 @@ python manage.py migrate
 python seed_data.py
 ```
 
-### 🔑 Credenciales de Acceso para Pruebas
+### 🔑 Credenciales de Acceso para Pruebas. (Estas gerenciales son solo de prueba para la evaluación no son reales son ficticias.)
 
 #### 👤 Cuentas de Cliente Registrado (Comprador Estándar)
 * **Usuario Cliente Principal**: `Yeferson` (o `yeferson`)
